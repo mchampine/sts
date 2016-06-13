@@ -8,11 +8,16 @@
 
 ;; See https://gist.github.com/praseodym/f2499b3e14d872fe5b4a
 ;; and http://stackoverflow.com/questions/10221257/is-there-an-aes-library-for-clojure
+
+(def AES_KEY_SIZE 128)    ; bits
+(def GCM_NONCE_LENGTH 12) ; bytes
+(def GCM_TAG_LENGTH 128)  ; bits
+
 (defn get-raw-key [seed]
   (let [keygen (KeyGenerator/getInstance "AES")
         sr (SecureRandom/getInstance "SHA1PRNG")]
     (.setSeed sr (bytes seed))
-    (.init keygen 128 sr)
+    (.init keygen AES_KEY_SIZE sr)
     (.. keygen generateKey getEncoded)))
 
 (defn get-cipher [mode seed spec]
@@ -26,8 +31,8 @@
    Return a map {:c ciphertext :n nonce} - base64 values"
   [text key aad]
   (let [bytes (bytes text)
-        nonce (rand-bytes 12)
-        spec (GCMParameterSpec. 96 nonce)
+        nonce (rand-bytes GCM_NONCE_LENGTH)
+        spec (GCMParameterSpec. GCM_TAG_LENGTH nonce)
         cipher (get-cipher Cipher/ENCRYPT_MODE key spec)]
     (.updateAAD cipher (.getBytes aad))
     {:c (base64 (.doFinal cipher bytes)) :n (base64 nonce)}))
@@ -36,7 +41,7 @@
   "Decrypt ciphertext :c in encmap using nonce :n
    AAD must match exactly what was passed in or an exception is thrown"
   [encmap key aad]
-  (let [spec (GCMParameterSpec. 96 (debase64 (.getBytes (:n encmap))))
+  (let [spec (GCMParameterSpec. GCM_TAG_LENGTH (debase64 (.getBytes (:n encmap))))
         cipher (get-cipher Cipher/DECRYPT_MODE key spec)]
     (.updateAAD cipher (.getBytes aad))
     (.doFinal cipher (debase64 (.getBytes (:c encmap))))))
@@ -53,7 +58,7 @@
   "Generate a public/private RSA java.security.Keypair"
   []
   (let [generator (doto (java.security.KeyPairGenerator/getInstance "RSA")
-                    (.initialize 1024))]
+                    (.initialize 2048))]
     (.generateKeyPair generator)))
 
 (defn sign
