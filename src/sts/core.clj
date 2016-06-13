@@ -14,15 +14,18 @@
 ;; (0) Alice and Bob exchange public keys, and agree on parameters p and g
 ;; (0) See cryptfns for parameters p and g
 (def alices-keys (generate-keys))
-(def alices-pubkey (.getPublic alices-keys))    ; share with Bob
+(def alices-pubkey (.getPublic alices-keys))  ; share with Bob out of band
 (def alices-privkey (.getPrivate alices-keys))
 (def bobs-keys (generate-keys))
-(def bobs-pubkey (.getPublic bobs-keys))        ; share with Alice
+(def bobs-pubkey (.getPublic bobs-keys))      ; share with Alice out of band
 (def bobs-privkey (.getPrivate bobs-keys))
+
+;; TODO use core.async queues to create a handshake between alice and bob
+
 
 ;; (1) Alice → Bob : g^x
 (def alice-x (BigInteger. (rand-bytes (/ 2048 8))))
-(def alice-g-to-the-x  (powermod g alice-x p))      ; share g^x with Bob
+(def alice-g-to-the-x  (powermod g alice-x p))      ; send g^x to Bob
 
 ;; (2) Alice ← Bob : g^y, Ek(Sb(g^y, g^x))
 (def bob-y (BigInteger. (rand-bytes (/ 2048 8))))
