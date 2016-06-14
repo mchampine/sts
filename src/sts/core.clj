@@ -21,6 +21,9 @@
 (def bobs-pubkey (.getPublic bobs-keys))      ; share with Alice out of band
 (def bobs-privkey (.getPrivate bobs-keys))
 
+;; TODO use core.async queues to create a handshake between alice and bob
+
+
 ;; (1) Alice → Bob : g^x
 (def alice-x (BigInteger. (rand-bytes (/ 2048 8))))
 (def alice-g-to-the-x  (powermod g alice-x p))      ; send g^x to Bob
