@@ -1,7 +1,7 @@
 (ns sts.core
   (:require [sts.cryptfns :refer :all]
             [sts.util :refer :all]
-            [clojure.core.async :refer [put! take! chan close!]]))
+            [clojure.core.async :refer [go put! take! chan close! <! >!]]))
 
 ;; http://en.wikipedia.org/wiki/Station-to-Station_protocol
 ;; E=encrypt, S=sign, k=shared key, b=bob's private key

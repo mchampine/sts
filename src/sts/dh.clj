@@ -36,16 +36,20 @@
   ;; Alice's side of the handshake
   (let [alice-x (BigInteger. (rand-bytes (/ 2048 8)))
         alice-g-to-the-x (powermod g alice-x p)]
-    (go (>! alice-to-bob-chan alice-g-to-the-x))
+    (go (println "alice sends g^x  to bob")
+        (>! alice-to-bob-chan alice-g-to-the-x))
     (go (let [bobgy (<! bob-to-alice-chan)]
+          (println "alice recieves g^y from bob")
           (pr-md5 "alice" (powermod bobgy alice-x p)))))
 
   ;; Bob's side of the handshake
   (let [bob-y (BigInteger. (rand-bytes (/ 2048 8)))
         bob-g-to-the-y (powermod g bob-y p)]
     (go (let [alicegx (<! alice-to-bob-chan)]
+          (println "bob recieves g^x from alice")
           (pr-md5 "  bob" (powermod alicegx bob-y p))))
-    (go (>! bob-to-alice-chan bob-g-to-the-y))))
+    (go (println "bob sends g^y to alice")
+        (>! bob-to-alice-chan bob-g-to-the-y))))
 
 
 ;; Basic Diffie-Hellman sequence with a core.async handshake
