@@ -25,13 +25,9 @@
 
 ;; Basic Diffie-Hellman sequenced with a core.async handshake
 
-(defn pr-md5
-  "Print md5 fingerprint of big integer (k)ey for (p)erson, for easy key comparison"
-  [p k]
-  (println "md5 of" (str p "'s key:") (md5 (bi->ba k))))
-
 (let [alice-to-bob-chan (chan)
-      bob-to-alice-chan (chan)]
+      bob-to-alice-chan (chan)
+      pr-md5 (fn [p k] (println "md5 of" (str p "'s key:") (md5 (bi->ba k))))]
 
   ;; Alice's side of the handshake
   (let [alice-x (BigInteger. (rand-bytes (/ 2048 8)))
@@ -58,6 +54,11 @@
 ;; Set up channels
 (def alice-to-bob-chan (chan))
 (def bob-to-alice-chan (chan))
+
+(defn pr-md5
+  "Print md5 fingerprint of big integer (k)ey for (p)erson, for easy key comparison"
+  [p k]
+  (println "md5 of" (str p "'s key:") (md5 (bi->ba k))))
 
 ;; Alice
 (let [alice-x (BigInteger. (rand-bytes (/ 2048 8)))
