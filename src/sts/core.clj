@@ -1,6 +1,7 @@
 (ns sts.core
   (:require [sts.cryptfns :refer :all]
-            [sts.util :refer :all]))
+            [sts.util :refer :all]
+            [clojure.core.async :refer [put! take! chan close!]]))
 
 ;; http://en.wikipedia.org/wiki/Station-to-Station_protocol
 ;; E=encrypt, S=sign, k=shared key, b=bob's private key
@@ -19,9 +20,6 @@
 (def bobs-keys (generate-keys))
 (def bobs-pubkey (.getPublic bobs-keys))      ; share with Alice out of band
 (def bobs-privkey (.getPrivate bobs-keys))
-
-;; TODO use core.async queues to create a handshake between alice and bob
-
 
 ;; (1) Alice → Bob : g^x
 (def alice-x (BigInteger. (rand-bytes (/ 2048 8))))
@@ -56,3 +54,25 @@
 
 ;; At this point Alice and Bob have a verified shared symmetric key
 (= alice-K bob-K)  ; sanity check
+
+
+;; TODO use core.async queues to create a handshake between alice and bob
+;; TODO convert from using dummy arguments to passing all needed values.
+
+;; Set up Channels
+(def alice-to-bob-chan (chan))
+(def bob-to-alice-chan (chan))
+
+;; Alice Side
+(put! alice-to-bob-chan "alice g^x")
+(take! bob-to-alice-chan (fn [x] (println "alice expects bob g^y, etc and gets:" x)))
+(put! alice-to-bob-chan "alice Ek(Sa(gxgy))")
+(put! alice-to-bob-chan "alice is done")
+(take! bob-to-alice-chan (fn [x] (println "alice expects bob is done and gets:" x)))
+
+;; Bob Side
+(take! alice-to-bob-chan (fn [x] (println "bob expects alice g^x and gets:" x)))
+(put! bob-to-alice-chan "bob g^y, etc")
+(take! alice-to-bob-chan (fn [x] (println "bob expects alice Ek(Sa(gxgy)) and gets:" x)))
+(take! alice-to-bob-chan (fn [x] (println "bob expects alice is done and gets:" x)))
+(put! bob-to-alice-chan "bob is done.")

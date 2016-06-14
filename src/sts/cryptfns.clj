@@ -4,6 +4,7 @@
            javax.crypto.Cipher
            javax.crypto.spec.SecretKeySpec
            javax.crypto.spec.GCMParameterSpec
+           java.security.MessageDigest
            java.security.SecureRandom))
 
 ;; See https://gist.github.com/praseodym/f2499b3e14d872fe5b4a
@@ -87,3 +88,12 @@
         hash (->> (.doFinal mac bytearr)
                   (into []))]
     hash))
+
+;; warning: for checking equality only. don't use for any cryptographic security
+(defn md5 [s]
+  (let [^MessageDigest algorithm (MessageDigest/getInstance "MD5")
+        size (* 2 (.getDigestLength algorithm))
+        raw (.digest algorithm ^bytes s)
+        sig (.toString (BigInteger. 1 raw) 16)
+        padding (apply str (repeat (- size (count sig)) "0"))]
+    (str padding sig)))
